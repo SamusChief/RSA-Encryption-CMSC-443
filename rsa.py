@@ -11,25 +11,11 @@
         binary data instead.
 
     Sources: Algorithms used are adapted from pseudocode present in Cryptography: Theory and Practice by D.R. Stinson
+             3rd edition
 """
-
 from random import getrandbits, randint
 from statistics import mean, median
 from time import clock
-
-"""
-    Some stats: When conducted 100 times, here are stats about the key_gen() function's speed
-    - Average time: 0.71
-    - Maximum time: 2.26
-    - Median time: 0.62
-    - Minimum time: 0.05
-
-    For reference: Here are my computer's specifications:
-        Processor: 1.7 GHz 2.4 GHz
-        RAM: 8 GB
-        64 bit processor
-        Python version: 3.5
-"""
 
 
 def decode(n, b=26):
@@ -103,7 +89,7 @@ def mod_inv(a, m):
 
 def mod_exp_55(message, exponent, modulo):
     """
-    Calculates modular exponentiation based on the Algorithm 5.5 in Cryptography: Theory and Practive by D.R. Stinson
+    Calculates modular exponentiation based on the Algorithm 5.5 in Cryptography: Theory and Practice by D.R. Stinson
     :param message: the base
     :param exponent:
     :param modulo:
@@ -173,6 +159,21 @@ def get_prime():
     return n
 
 
+"""
+    When conducted 200 times, here are stats about the key_gen() function's speed
+    - Average time: 0.61
+    - Maximum time: 3.46
+    - Median time: 0.44
+    - Minimum time: 0.05
+
+    For reference: Here are my computer's specifications:
+        Processor: 1.7 GHz 2.4 GHz
+        RAM: 8 GB (~7.88 usable)
+        64 bit processor
+        Python version: 3.5
+"""
+
+
 def key_gen():
     """
     Generates a public key and a private key for RSA encryption
@@ -185,8 +186,8 @@ def key_gen():
         - It is a fermat prime, meaning it is of the form 2^2^4 + 1
             - This means in binary it is both prime and has only two 1's in it, so it is faster to use on
               a computer using bit shifting (65537 in binary is 100000000000000001)
-        - It is a known large prime, and using it is MUCH faster than calculating
-          a co-prime number manually every time
+    - It is a known large prime, and using it is MUCH faster than calculating
+      a co-prime number manually every time
     In a situation where speed is not as much of a concern, generating a random b may prove to be a more secure
     option
     """
@@ -216,32 +217,20 @@ def key_gen():
     a = mod_inv(b, phi)
     # Assemble our private key for returning
     private_key = (p, q, a)
-
     # We return our key pair. See the top of this file for some statistics on this function
     return public_key, private_key
 
 
-def rsa_encrypt(n, b, message):
+def rsa(n, e, message):
     """
-    Encrypts a message given a public key generated using RSA encryption algorithms
-    :param n, b: the public key pair, used for encryption
-    :param message: the message to be encrypted, encoded as a decimal
-    :return: an encrypted plaintext, using the message and public key
+    Encrypts or decrypts a given integer representation of a string, based on e
+    :param n:
+    :param e:
+    :param message:
+    :return:
     """
     # eK(x) = (x ** b) % n
-    return mod_exp_55(message, b, n)
-
-
-def rsa_decrypt(p, q, a, message):
-    """
-    Decrypts a message given a private key generated using the RSA encryption algorithms
-    :param p, q, a: the private key values, used for decryption
-    :param message: the encrypted plaintext to be decrypted
-    :return: The decrypted message
-    """
-    # dK(y) = y ^ a mod n
-    n = p * q
-    return mod_exp_55(message, a, n)
+    return mod_exp_55(message, e, n)
 
 
 def print_menu():
@@ -260,8 +249,7 @@ def print_menu():
 
 def main():
     """
-    Test the key generation and get an average generation time
-    :return: Nothing. Results will be output to the screen using print()
+    Allows user to generate keys, run tests, decrypt, and encrypt to different specified files
     """
     print("This program was made to model RSA Encryption protocol as defined in Cryptography: Theory and Practice")
     print("\t\t(3rd edition) by D.R. Stinson, and with lecture notes created by Michael Novey.\n")
@@ -342,7 +330,7 @@ def main():
             start = clock()
             for line in messages_file:
                 l = ''.join([i for i in line if i.isalpha()])
-                ciphertext_file.write(str(rsa_encrypt(n, b, encode(l))))
+                ciphertext_file.write(str(rsa(n, b, encode(l))))
                 ciphertext_file.write('\n')
             print("Operation complete in", clock() - start, "seconds.")
             ciphertext_file.close()
@@ -376,7 +364,7 @@ def main():
             # decrypted_file
             start = clock()
             for line in ciphertext_file:
-                decrypted_file.write(str(decode(rsa_decrypt(p, q, a, int(line)))))
+                decrypted_file.write(str(decode(rsa(p * q, a, int(line)))))
                 decrypted_file.write('\n')
             print("Operation complete in", clock() - start, "seconds.")
             ciphertext_file.close()
